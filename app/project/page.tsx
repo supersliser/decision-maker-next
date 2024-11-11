@@ -105,7 +105,15 @@ function getTotal(columns: column[], row: row): number {
     return total;
 }
 
-export default function ProjectPage() {
+export default function ProjectPageReal() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <ProjectPage />
+        </Suspense>
+    )
+}
+
+function ProjectPage() {
     const searchParams = useSearchParams();
     const supabase = createClient();
 
@@ -152,7 +160,6 @@ export default function ProjectPage() {
 
 
     return (
-        <Suspense fallback={<div>Loading...</div>}>
             <div style={{ overflow: 'hidden' }}>
                 <div key={"header"} style={{ position: "absolute", top: '0', left: '0', width: '100%', height: '5%', backgroundColor: '#2D2436', display: 'flex', alignItems: 'end', justifyContent: 'start', flexDirection: 'row', gap: '10px', paddingLeft: '5%', paddingRight: '5%', borderBottom: '1px solid rgba(255, 255, 255, 0.5)' }}>
                     <h1>{projectData?.title}</h1>
@@ -296,6 +303,5 @@ export default function ProjectPage() {
                     </div>
                 </div>
             </div>
-        </Suspense>
     )
 }
