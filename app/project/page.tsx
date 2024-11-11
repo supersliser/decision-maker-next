@@ -97,6 +97,33 @@ function getWorth(cell: cell, column: column) {
     }
 }
 
+async function save(columns: column[], rows: row[], projectID: number) {
+    const supabase = createClient();
+
+    for (let i = 0; i < columns.length; i++) {
+        const { data } = await supabase.from('Column').upsert({
+            project_id: projectID,
+            title: columns[i].title,
+            position: columns[i].position,
+            good_point: columns[i].goodPoint,
+            bad_point: columns[i].badPoint,
+            type: columns[i].type,
+            worth: columns[i].worth
+        }).select("id");
+        columns[i].id = data![0].id;
+    }
+    for (let i = 0; i < rows.length; i++) {
+        for (let j = 0; j < rows[i].cells.length; j++) {
+            await supabase.from('Cell').upsert({
+                column_id: columns[j].id,
+                value: rows[i].cells[j].value,
+                data: rows[i].cells[j].data,
+                row: i
+            });
+        }
+    }
+}
+
 function getTotal(columns: column[], row: row): number {
     let total = 0;
     for (let i = 0; i < row.cells.length; i++) {
@@ -163,6 +190,7 @@ function ProjectPage() {
             <div style={{ overflow: 'hidden' }}>
                 <div key={"header"} style={{ position: "absolute", top: '0', left: '0', width: '100%', height: '5%', backgroundColor: '#2D2436', display: 'flex', alignItems: 'end', justifyContent: 'start', flexDirection: 'row', gap: '10px', paddingLeft: '5%', paddingRight: '5%', borderBottom: '1px solid rgba(255, 255, 255, 0.5)' }}>
                     <h1>{projectData?.title}</h1>
+                    <button onClick={() => { save(columns, rows, projectData!.id) }} style={{ padding: '10px', backgroundColor: '#473061', borderRadius: '20px', minWidth: '20%' }}>Save</button>
                 </div>
 
                 <div key={"table"} style={{ position: 'absolute', top: '5%', left: '0', display: 'flex', minWidth: '100vw', minHeight: '95vh', backgroundColor: '#2E2B33', flexDirection: 'row', alignItems: 'center', justifyContent: 'center', overflow: 'auto', zIndex: '1' }} >
