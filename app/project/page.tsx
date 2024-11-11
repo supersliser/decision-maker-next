@@ -150,14 +150,6 @@ export default function ProjectPage() {
         setLoading(false);
     }, []);
 
-    if (loading) {
-        return (
-            <div>
-                Loading...
-            </div>
-        );
-    }
-
 
     return (
         <Suspense fallback={<div>Loading...</div>}>
