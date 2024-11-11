@@ -58,11 +58,9 @@ export class project {
 export class row {
     position: number;
     cells: cell[];
-    total: number;
 
-    public constructor(position: number, cells: cell[], totals: number) {
+    public constructor(position: number, cells: cell[]) {
         this.position = position;
         this.cells = cells;
-        this.total = totals;
     }
 }

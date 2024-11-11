@@ -6,6 +6,106 @@ import { useEffect, useLayoutEffect, useState } from "react";
 import { column, cell, project, columnType, row } from "./classes";
 import { table } from "console";
 
+function getColour(cell: cell, column: column) {
+    switch (column.type) {
+        case columnType.text:
+            return "#000000";
+        case columnType.number:
+            if (cell.value > column.goodPoint) {
+                return "#00FF00";
+            }
+            else if (cell.value < column.badPoint) {
+                return "#FF0000";
+            }
+            else {
+                return "#FFFF00";
+            }
+        case columnType.rating:
+            if (cell.value >= column.goodPoint) {
+                return "#00FF00";
+            }
+            else if (cell.value < column.badPoint) {
+                return "#FF0000";
+            }
+            else {
+                return "#FFFF00";
+            }
+        case columnType.price:
+            if (cell.value < column.goodPoint) {
+                return "#00FF00";
+            }
+            else if (cell.value > column.badPoint) {
+                return "#FF0000";
+            }
+            else {
+                return "#FFFF00";
+            }
+        case columnType.boolean:
+            if (cell.value == column.goodPoint) {
+                return "#00FF00";
+            }
+            else if (cell.value == column.badPoint) {
+                return "#FF0000";
+            }
+        case columnType.link:
+            return "#000000";
+    }
+}
+
+function getWorth(cell: cell, column: column) {
+    switch (column.type) {
+        case columnType.text:
+            return cell.value;
+        case columnType.number:
+            if (cell.value > column.goodPoint) {
+                return 1;
+            }
+            else if (cell.value < column.badPoint) {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+        case columnType.rating:
+            if (cell.value >= column.goodPoint) {
+                return 1;
+            }
+            else if (cell.value < column.badPoint) {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+        case columnType.price:
+            if (cell.value < column.goodPoint) {
+                return 1;
+            }
+            else if (cell.value > column.badPoint) {
+                return -1;
+            }
+            else {
+                return 0;
+            }
+        case columnType.boolean:
+            if (cell.value == column.goodPoint) {
+                return 1;
+            }
+            else if (cell.value == column.badPoint) {
+                return -1;
+            }
+        case columnType.link:
+            return cell.value;
+    }
+}
+
+function getTotal(columns: column[], row: row): number {
+    let total = 0;
+    for (let i = 0; i < row.cells.length; i++) {
+        total += row.cells[i].value * columns[i].worth;
+    }
+    return total;
+}
+
 export default function ProjectPage() {
     const searchParams = useSearchParams();
     const supabase = createClient();
@@ -17,6 +117,7 @@ export default function ProjectPage() {
     const [projectData, setProjectData] = useState<project>();
     const [loading, setLoading] = useState(true);
     const [columnSelected, setColumnSelected] = useState(-1);
+    const [rowSelected, setRowSelected] = useState(-1);
 
     const projectID = searchParams.get('id');
     // console.log(projectID);
@@ -41,14 +142,10 @@ export default function ProjectPage() {
                     for (let j = 0; j < data!.length; j++) {
                         rowIN.push(new cell(data![j].data, data![j].value));
                     }
-                    tempR.push(new row(i, rowIN, 0));
+                    tempR.push(new row(i, rowIN));
                 }
                 setRows(tempR);
-                console.log(rows);
-                console.log(columns);
             }
-            // console.log(user);
-            // console.log(projectData);
         }
         fetchData();
         setLoading(false);
@@ -73,13 +170,17 @@ export default function ProjectPage() {
                 {columns.map((column: column) => (
                     <div key={"row" + column.position} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'row' }}>
                         <div key={"column" + column.position} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }} onMouseDown={() => setColumnSelected(-1)}>
-                            <input type="text" style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#ffffff', fontSize: '1rem', backgroundColor: column.position == columnSelected ? '#00E042' : '#2D2436' }} name={column.id + "title"} defaultValue={column.title} placeholder="title" onClick={() => setColumnSelected(column.position)} onChange={(event) => {
+                            <input type="text" style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#ffffff', fontSize: '1rem', backgroundColor: column.position == columnSelected ? '#00E042' : '#2D2436' }} name={column.id + "title"} defaultValue={column.title} placeholder="title" onClick={() => {setColumnSelected(column.position); setRowSelected(-1)}} onChange={(event) => {
                                 let temp = columns;
                                 temp[column.position].title = event.target.value;
                                 setColumns(temp);
                             }} />
                             {rows.map((row: row) => (
-                                <input key={"row" + row.position + "cell" + column.position} type="text" style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#2D2436', display: 'flex', alignItems: 'center', justifyContent: 'start', flexDirection: 'row' }} name={column.id + "x" + row.position} defaultValue={row.cells[column.position].data}></input>
+                                <input key={"row" + row.position + "cell" + column.position} type="text" style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#2D2436', display: 'flex', alignItems: 'center', justifyContent: 'start', flexDirection: 'row', backgroundColor: getColour(row.cells[column.position], column) }} name={column.id + "x" + row.position} defaultValue={row.cells[column.position].data} onClick={() => {setColumnSelected(column.position); setRowSelected(row.position)}} onChange={() => {
+                                    let temp = [...rows];
+                                    temp[row.position].cells[column.position].value = getWorth(row.cells[column.position], column);
+                                    setRows(temp);
+                                }}></input>
                             ))}
                             <button style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#2D2436' }} onClick={() => {
                                 let newRow: cell[] = [];
@@ -87,12 +188,21 @@ export default function ProjectPage() {
                                     newRow.push(new cell("", 0));
                                 }
                                 let newRows = [...rows];
-                                newRows.push(new row(newRows.length, newRow, 0));
+                                newRows.push(new row(newRows.length, newRow));
                                 setRows(newRows);
                             }}>\/+\/</button>
 
                         </div>
-                        {columnSelected === column.position ?
+                        {rowSelected !== -1 && columnSelected === column.position  ? <form style={{ margin: '20px', backgroundColor: '#2D2436', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.5), z-index: 500' }} >
+                            <div style={{ display: 'flex', gap: '8px', alignItems: 'start', justifyContent: 'start', flexDirection: 'column', marginTop: '16px' }}>
+                                <h4>Value</h4>
+                                <input type="number" min="-1" max="1" step="1" value={rows[rowSelected].cells[column.position].value} onChange={(event) => {
+                                    let temp = [...rows];
+                                    temp[rowSelected].cells[column.position].value = parseInt(event.target.value);
+                                    setRows(temp);
+                                }} />
+                            </div>
+                            </form> : columnSelected === column.position ?
                             <form style={{margin: '20px', backgroundColor: '#2D2436', padding: '10px', borderRadius: '10px', border: '1px solid rgba(255, 255, 255, 0.5), z-index: 500'}} onClick={() => {console.log("hi")}}>
                                 <h3>{column.title}</h3>
                                 <div style={{ display: 'flex', gap: '8px', alignItems: 'start', justifyContent: 'start', flexDirection: 'column', marginTop: '16px' }}>
@@ -179,7 +289,6 @@ export default function ProjectPage() {
                 <div key={"addColumn"} style={{ display: 'flex', gap: '8px', alignItems: 'start', justifyContent: 'start', flexDirection: 'column', }}>
                     <button style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#2D2436' }} onClick={() => {
                         setColumns([...columns, new column("New Column", columns.length, columns.length, 0, 0, 0, 0)]);
-                        console.log(columns);
                         let temp = rows;
                         for (let i = 0; i < temp.length; i++) {
                             temp[i].cells.push(new cell("", 0));
@@ -190,7 +299,7 @@ export default function ProjectPage() {
                 <div key={"column totoal"} style={{ marginBottom: '16px' ,display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column' }} onMouseDown={() => setColumnSelected(-1)}>
                     <p style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#ffffff', fontSize: '1rem', backgroundColor: '#2D2436' }}>total</p>
                     {rows.map((row: row) => (
-                        <p key={"row" + row.position + "cell total"} style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#2D2436', display: 'flex', alignItems: 'center', justifyContent: 'start', flexDirection: 'row' }}>{row.total}</p>
+                        <p key={"row" + row.position + "cell total"} style={{ borderWidth: '1px', borderStyle: 'solid', borderColor: '#2D2436', display: 'flex', alignItems: 'center', justifyContent: 'start', flexDirection: 'row' }}>{getTotal(columns, row)}</p>
                     ))}
                 </div>
             </div>
