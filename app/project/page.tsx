@@ -4,7 +4,6 @@ import { createClient } from "@/utils/supabase/client";
 import { redirect, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useLayoutEffect, useState } from "react";
 import { column, cell, project, columnType, row } from "./classes";
-import { table } from "console";
 
 function getColour(cell: cell, column: column) {
     switch (column.type) {
@@ -161,7 +160,7 @@ export default function ProjectPage() {
 
 
     return (
-        <Suspense>
+        <Suspense fallback={<div>Loading...</div>}>
             <div style={{ overflow: 'hidden' }}>
                 <div key={"header"} style={{ position: "absolute", top: '0', left: '0', width: '100%', height: '5%', backgroundColor: '#2D2436', display: 'flex', alignItems: 'end', justifyContent: 'start', flexDirection: 'row', gap: '10px', paddingLeft: '5%', paddingRight: '5%', borderBottom: '1px solid rgba(255, 255, 255, 0.5)' }}>
                     <h1>{projectData?.title}</h1>
