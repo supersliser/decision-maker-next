@@ -5,7 +5,7 @@ export default function MenuItem({ title, description, id, created, modified, au
 
     return (
         <div style={{ display: 'flex', gap: '8px', alignItems: 'start', justifyContent: 'start', flexDirection: 'column', width: '70vw', }}>
-            <a href={`/${id}`} style={{ borderRadius: '150px', backgroundColor: '#2D2436', borderWidth: '1px', borderStyle: 'solid', padding: '20px', width: '100%', display: 'flex', gap: '8px', alignItems: 'start', justifyContent: 'start', flexDirection: 'column', paddingLeft: '5%' }}>
+            <a href={`/project?id=${id}`} style={{ borderRadius: '150px', backgroundColor: '#2D2436', borderWidth: '1px', borderStyle: 'solid', padding: '20px', width: '100%', display: 'flex', gap: '8px', alignItems: 'start', justifyContent: 'start', flexDirection: 'column', paddingLeft: '5%' }}>
                 <h2>{title}</h2>
                 <div style={{ display: 'flex', gap: '50px', alignItems: 'center', justifyContent: 'start', flexDirection: 'row', width: '100%', paddingLeft: '5%' }}>
                     <div style={{width: '12%'}}><p>Created:</p><p style={{paddingLeft: '5%', width: '95%'}}>{created.toDateString()}</p></div>
